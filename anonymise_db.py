@@ -17,8 +17,8 @@ DEFAULT_DB_HOST = "localhost"
 DEFAULT_DB_PORT = "5432"
 DEFAULT_OUTPUT_DUMP_FILE = "anonymised.dump"
 
-def modify_and_dump(dbname: str, user: str, password: str, host: str, port: str, dumpfile: str):
-    """Connects to PostgreSQL, modifies data in a transaction, dumps, and rolls back. """
+def modify_and_dump(dbname: str, user: str, password: str, host: str, port: str):
+    """Connects to PostgreSQL, modifies data in user table."""
     fake = Faker("de_DE")
     LOG.info(" connecting to DB")
     conn = psycopg2.connect(
@@ -56,23 +56,13 @@ def modify_and_dump(dbname: str, user: str, password: str, host: str, port: str,
             LOG.info(f"   Updating with info: {fullname}: {name}, {email}")
 
             cursor.execute(
-                f'UPDATE "user" SET name = \'{name}\', fullname = \'{fullname}\', email = \'{email}\' WHERE id = \'{user_id}\';'
+                f'UPDATE "user" SET name = \'{name}\', fullname = \'{fullname}\', email = \'{email}\', about = \'\', image_url = \'\' WHERE id = \'{user_id}\';'
             )
 
-        # Dump the modified version
-        LOG.info(f" writing dump to {dumpfile}")
-        subprocess.run(
-            f'PGPASSWORD={password} pg_dump -U {user} -h {host} -p {port} -d {dbname} -F c -f {dumpfile}',
-            shell=True,
-            check=True
-        )
-
+        LOG.info(" committing changes")
+        conn.commit()
         LOG.info(" done")
 
-        # Roll back to keep original data intact
-        LOG.info(" rolling back db")
-        conn.rollback()
-        LOG.info(" done")
     except Exception as e:
         conn.rollback()  # Ensure rollback on any error
         print(f"Error: {e}")
@@ -102,10 +92,6 @@ parser.add_argument('--port',
                     help=f"Postgres database port. Default: {DEFAULT_DB_PORT}.",
                     default=DEFAULT_DB_PORT,
                     )
-parser.add_argument('--dumpfile',
-                    help=f"Filename of the output dump. Default: {DEFAULT_OUTPUT_DUMP_FILE}.",
-                    default=DEFAULT_OUTPUT_DUMP_FILE,
-                    )
 requiredNamed = parser.add_argument_group('required named arguments')
 requiredNamed.add_argument('--pw', help='Password to access the database', required=True)
 
@@ -117,5 +103,4 @@ modify_and_dump(
     password=args.pw,
     host=args.host,
     port=args.port,
-    dumpfile=args.dumpfile
 )

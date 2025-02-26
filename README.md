@@ -14,9 +14,10 @@ The script will:
 
 ```
 % python anonymise_db.py --help    
-usage: anonymise_db.py [-h] [--db DB] [--user USER] [--host HOST] [--port PORT] [--dumpfile DUMPFILE] --pw PW
+usage: anonymise_db.py [-h] [--db DB] [--user USER] [--host HOST] [--port PORT] --pw PW
 
 Connect to a CKAN DB in Postgres and replace `fullname`, `name` and `email` in the `user` table with random names.
+Also delete `about` and `image_url` (set to '').
 
 options:
   -h, --help           show this help message and exit
@@ -24,7 +25,6 @@ options:
   --user USER          Username to access the database. Default: ckan
   --host HOST          Postgres database host. Default: localhost.
   --port PORT          Postgres database port. Default: 5432.
-  --dumpfile DUMPFILE  Filename of the output dump. Default: anonymised.dump.
 
 required named arguments:
   --pw PW              Password to access the database
