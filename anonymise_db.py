@@ -1,6 +1,6 @@
 import logging
-import subprocess
 import argparse
+from getpass import getpass
 
 import psycopg2
 from faker import Faker
@@ -92,15 +92,15 @@ parser.add_argument('--port',
                     help=f"Postgres database port. Default: {DEFAULT_DB_PORT}.",
                     default=DEFAULT_DB_PORT,
                     )
-requiredNamed = parser.add_argument_group('required named arguments')
-requiredNamed.add_argument('--pw', help='Password to access the database', required=True)
 
 args = parser.parse_args()
 
-modify_and_dump(
-    dbname=args.db,
-    user=args.user,
-    password=args.pw,
-    host=args.host,
-    port=args.port,
-)
+password = getpass(f"Password for user '{args.user}': ")
+
+# modify_and_dump(
+#     dbname=args.db,
+#     user=args.user,
+#     password=password,
+#     host=args.host,
+#     port=args.port,
+# )
