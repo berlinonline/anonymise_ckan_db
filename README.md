@@ -33,11 +33,31 @@ required named arguments:
 ## Requirements
 
 - The script has been tested with Python 3.12.
-- It uses `faker`, `python-slugify` and `psycopg2`.
+- It uses `faker`, `python-slugify` and `psycopg2` (see [requirements.txt](requirements.txt))
 
 ## Installation
 
+- Clone this repository
 
+```
+git clone https://github.com/berlinonline/anonymise_ckan_db
+```
+
+- Optionally create and activate a virtual environment
+
+```
+cd anonymise_ckan_db
+python -m venv venv
+. venv/bin/activate
+```
+
+- Install dependencies:
+
+```
+pip install -r requirements.txt
+```
+
+- Before running, you'll need a file `exclude.json` with a JSON list of usernames to exclude from the anonymisation (function accounts etc.).
 
 ## License
 
