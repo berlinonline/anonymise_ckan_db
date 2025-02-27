@@ -1,5 +1,8 @@
-import logging
 import argparse
+import json
+import logging
+import os
+import sys
 from getpass import getpass
 
 import psycopg2
@@ -15,9 +18,9 @@ DEFAULT_DB_NAME = "ckan"
 DEFAULT_DB_USER = "ckan"
 DEFAULT_DB_HOST = "localhost"
 DEFAULT_DB_PORT = "5432"
-DEFAULT_OUTPUT_DUMP_FILE = "anonymised.dump"
+DEFAULT_EXCLUDE_FILE = "exclude.json"
 
-def modify_and_dump(dbname: str, user: str, password: str, host: str, port: str):
+def modify_and_dump(dbname: str, user: str, password: str, host: str, port: str, exclude: list=[]):
     """Connects to PostgreSQL, modifies data in user table."""
     fake = Faker("de_DE")
     LOG.info(" connecting to DB")
@@ -35,6 +38,9 @@ def modify_and_dump(dbname: str, user: str, password: str, host: str, port: str)
         names = []
 
         for (user_id,name) in users:
+            if name in exclude:
+                LOG.info(f" excluding {user_id} ({name})")
+                continue
             LOG.info(f" modifying {user_id} ({name})")
             unique = False
             while not unique:
@@ -92,15 +98,30 @@ parser.add_argument('--port',
                     help=f"Postgres database port. Default: {DEFAULT_DB_PORT}.",
                     default=DEFAULT_DB_PORT,
                     )
+parser.add_argument('--exclude',
+                    help=f"Path to json file with list of usernames to be excluded. Default: {DEFAULT_EXCLUDE_FILE}.",
+                    default=DEFAULT_EXCLUDE_FILE,
+                    )
 
 args = parser.parse_args()
 
 password = getpass(f"Password for user '{args.user}': ")
 
-# modify_and_dump(
-#     dbname=args.db,
-#     user=args.user,
-#     password=password,
-#     host=args.host,
-#     port=args.port,
-# )
+exclude_path = args.exclude
+exclude = []
+if os.path.isfile(exclude_path):
+    with open(exclude_path) as f:
+        exclude = json.load(f)
+else:
+    LOG.error(f" cannot open exclude file: {exclude_path}")
+    sys.exit()
+
+
+modify_and_dump(
+    dbname=args.db,
+    user=args.user,
+    password=password,
+    host=args.host,
+    port=args.port,
+    exclude=exclude,
+)
